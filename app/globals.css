@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ── Design tokens (Tailwind v4 @theme) ─────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand accent */
+  --color-brand:       #00C9A7;
+  --color-brand-light: #33D4B8;
+  --color-brand-dark:  #00A88C;
+
+  /* Navy backgrounds */
+  --color-navy-900: #0B1120;
+  --color-navy-800: #0F1726;
+  --color-navy-700: #151F33;
+  --color-navy-600: #1C2840;
+  --color-navy-500: #243050;
+  --color-navy-400: #344162;
+
+  /* Surface shorthands */
+  --color-surface:        #1C2840;
+  --color-surface-muted:  #151F33;
+  --color-surface-raised: #243050;
+  --color-surface-border: #2D3A52;
+
+  /* Text */
+  --color-text-primary:   #F0F4FF;
+  --color-text-secondary: #8B9BBE;
+  --color-text-muted:     #4E5E7A;
+
+  /* Status */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger:  #EF4444;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base styles ─────────────────────────────────────────── */
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-navy-800);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }

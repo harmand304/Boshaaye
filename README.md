@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Boshaaye Finance App
 
-## Getting Started
+A premium, server-side rendered financial management application built thoughtfully with Next.js 16 (App Router), Tailwind CSS v4, and Supabase.
 
-First, run the development server:
+## Features
+- **Dashboard**: Real-time budget tracking and computed wallet balances.
+- **Transactions & Transfers**: Track income, expenses, investments, and wallet transfers with historical immutability via Allocation Snapshotting.
+- **Settings**: Automated rules to split incoming revenue into structured budgets. 
+- **CSV Exports**: Export transactions, transfers, and historical allocation settings in one click.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Local Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone & Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Configure Environment Variables**
+   Rename `.env.example` to `.env.local` (or create one) and add your Supabase connection strings:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://<YOUR_PROJECT_REF>.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<YOUR_ANON_KEY>
+   ```
 
-## Learn More
+3. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🗄️ Supabase Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This app uses Supabase for a PostgreSQL database. 
 
-## Deploy on Vercel
+1. Create a new project in [Supabase](https://supabase.com).
+2. Go to the SQL Editor in your Supabase Dashboard.
+3. Run the schema file included in the `/supabase` folder:
+   - Copy the contents of `supabase/migrations/001_schema.sql` and run it. This will create the `wallets`, `categories`, `allocation_settings`, `transactions`, and `transfers` tables.
+4. (Optional) Run `supabase/migrations/002_seed.sql` to populate the database with default categories, wallets, and dummy data.
+5. Grab your **Project URL** and **anon public key** from the Project Settings > API page and place them in your `.env.local` file.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌐 Deployment to Vercel
+
+The application is fully production-ready and optimized for Vercel.
+
+1. Push your code to a GitHub, GitLab, or Bitbucket repository.
+2. Go to [Vercel](https://vercel.com) and click **Add New... > Project**.
+3. Import your repository. Vercel will auto-detect the Next.js framework.
+4. In the **Environment Variables** section, add your Supabase credentials EXACTLY as they appear in your local setup:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Click **Deploy**. Vercel will build and publish your app.
+
+---
+
+## 📊 CSV Export feature
+The application includes a built-in CSV export for all core entities:
+* `/api/export/transactions`
+* `/api/export/transfers`
+* `/api/export/settings`
+
+The "Export CSV" buttons found on the Transactions, Transfers, and Settings pages directly interface with these optimized API routes to download complete histories natively.
