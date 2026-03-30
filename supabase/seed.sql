@@ -32,6 +32,7 @@ INSERT INTO categories (name, type) VALUES
   ('Marketing',          'expense'),
   ('Salaries',           'expense'),
   ('Miscellaneous Ops',  'expense'),
+  ('Gear / Assets',      'expense'),
 
   -- Investment (capital coming in)
   ('Capital Injection',  'investment'),
