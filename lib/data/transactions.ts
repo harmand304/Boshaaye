@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { Transaction, Category, Wallet } from '@/lib/types'
 
 export interface TransactionWithRelations extends Transaction {
@@ -25,7 +25,7 @@ export interface PaginatedTransactions {
 
 export async function getTransactions(params?: TransactionQueryParams): Promise<PaginatedTransactions> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const page = params?.page || 1
     const pageSize = params?.pageSize || 20
     const start = (page - 1) * pageSize
@@ -70,7 +70,7 @@ export async function getTransactions(params?: TransactionQueryParams): Promise<
 
 export async function getTransactionById(id: string): Promise<Transaction | null> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('transactions')
       .select('*')

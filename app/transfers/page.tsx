@@ -64,6 +64,12 @@ export default async function TransfersPage() {
                       <div className="text-xs text-[var(--color-text-secondary)] mt-1">
                         {t.date} {t.notes ? `• ${t.notes}` : ''}
                       </div>
+                      {(t.created_by_email || t.updated_by_email) && (
+                        <div className="text-[10px] text-[var(--color-text-muted)] mt-1 flex items-center gap-2">
+                           {t.created_by_email && <span>By {t.created_by_email.split('@')[0]}</span>}
+                           {t.updated_by_email && <span className="text-[var(--color-text-secondary)] pl-2 border-l border-[var(--color-surface-border)]">Update: {t.updated_by_email.split('@')[0]}</span>}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
                         <TransferRowActions id={t.id} />
                       </div>

@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { getAllocationForDate } from '@/lib/data/allocation'
 import { revalidatePath } from 'next/cache'
 
@@ -21,7 +21,8 @@ export type ActionResult = { success: true } | { success: false; error: string }
 
 export async function createTransaction(input: TransactionInput): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
     // Build allocation snapshot if this is a client income
     let alloc: Record<string, number | null> = {
@@ -63,6 +64,8 @@ export async function createTransaction(input: TransactionInput): Promise<Action
       notes:                  input.notes || null,
       is_client_income:       input.is_client_income,
       expense_funding_source: input.expense_funding_source || null,
+      created_by_user_id:     user?.id,
+      created_by_email:       user?.email,
       ...alloc,
     })
 
@@ -78,7 +81,8 @@ export async function createTransaction(input: TransactionInput): Promise<Action
 
 export async function updateTransaction(id: string, input: TransactionInput): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
     let alloc: Record<string, number | null> = {
       alloc_savings_pct: null,
@@ -121,6 +125,8 @@ export async function updateTransaction(id: string, input: TransactionInput): Pr
         notes:                  input.notes || null,
         is_client_income:       input.is_client_income,
         expense_funding_source: input.expense_funding_source || null,
+        updated_by_user_id:     user?.id,
+        updated_by_email:       user?.email,
         ...alloc,
       })
       .eq('id', id)
@@ -137,7 +143,7 @@ export async function updateTransaction(id: string, input: TransactionInput): Pr
 
 export async function deleteTransaction(id: string): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { error } = await supabase
       .from('transactions')

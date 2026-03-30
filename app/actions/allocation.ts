@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export type AllocationInput = {
@@ -15,7 +15,8 @@ export type ActionResult = { success: true } | { success: false; error: string }
 
 export async function createAllocationSetting(input: AllocationInput): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
     const total = input.savings_pct + input.ops_pct + input.harmand_pct + input.bako_pct
     if (total !== 100) {
@@ -28,6 +29,8 @@ export async function createAllocationSetting(input: AllocationInput): Promise<A
       ops_pct: input.ops_pct,
       harmand_pct: input.harmand_pct,
       bako_pct: input.bako_pct,
+      created_by_user_id: user?.id,
+      created_by_email: user?.email,
     })
 
     if (error) {

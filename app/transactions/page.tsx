@@ -91,6 +91,12 @@ export default async function TransactionsPage({
                     <td className="px-6 py-5">
                       <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-brand)] transition-colors">{t.title}</div>
                       {t.notes && <div className="text-xs text-[var(--color-text-muted)] mt-1.5 max-w-[200px] sm:max-w-xs truncate">{t.notes}</div>}
+                      {(t.created_by_email || t.updated_by_email) && (
+                        <div className="text-[10px] text-[var(--color-text-muted)] mt-1.5 flex items-center gap-2">
+                           {t.created_by_email && <span>Added by {t.created_by_email.split('@')[0]}</span>}
+                           {t.updated_by_email && <span className="text-[var(--color-text-secondary)] pl-2 border-l border-[var(--color-surface-border)]">Updated by {t.updated_by_email.split('@')[0]}</span>}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-5">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${

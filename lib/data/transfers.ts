@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { Transfer, Wallet } from '@/lib/types'
 
 export interface TransferWithWallets extends Transfer {
@@ -8,7 +8,7 @@ export interface TransferWithWallets extends Transfer {
 
 export async function getTransfers(): Promise<TransferWithWallets[]> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('transfers')
       .select('*, from_wallet:wallets!from_wallet_id(*), to_wallet:wallets!to_wallet_id(*)')
@@ -24,7 +24,7 @@ export async function getTransfers(): Promise<TransferWithWallets[]> {
 
 export async function getTransferById(id: string): Promise<Transfer | null> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('transfers')
       .select('*')

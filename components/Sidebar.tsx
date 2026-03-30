@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
@@ -26,7 +27,14 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-56 min-h-screen border-r border-[var(--color-surface-border)] bg-[var(--color-surface-muted)] px-3 py-6 gap-1">
       {/* Logo */}
-      <div className="px-3 mb-6">
+      <div className="px-3 mb-6 flex items-center gap-2">
+        <Image 
+          src="/logo.png" 
+          alt="Boshaaye Logo" 
+          width={28} 
+          height={28}
+          className="rounded-md object-contain drop-shadow-sm" 
+        />
         <span className="text-sm font-bold tracking-wide text-[var(--color-brand)]">
           Boshaaye Finance
         </span>

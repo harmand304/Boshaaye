@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { AllocationSettings } from '@/lib/types'
 
 /**
@@ -7,7 +7,7 @@ import type { AllocationSettings } from '@/lib/types'
  */
 export async function getAllocationForDate(date: string): Promise<AllocationSettings | null> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('allocation_settings')
       .select('*')
@@ -31,7 +31,7 @@ export async function getCurrentAllocation(): Promise<AllocationSettings | null>
 /** Fetch all allocation settings descending by effective date. */
 export async function getAllAllocationSettings(): Promise<AllocationSettings[]> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from('allocation_settings')
       .select('*')

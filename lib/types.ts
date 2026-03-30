@@ -26,6 +26,10 @@ export interface AllocationSettings {
   bako_pct: number
   effective_from: string
   created_at: string
+  created_by_user_id?: string | null
+  created_by_email?: string | null
+  updated_by_user_id?: string | null
+  updated_by_email?: string | null
 }
 
 export interface Transaction {
@@ -50,6 +54,10 @@ export interface Transaction {
   alloc_harmand_amount: number | null
   alloc_bako_amount: number | null
   created_at: string
+  created_by_user_id?: string | null
+  created_by_email?: string | null
+  updated_by_user_id?: string | null
+  updated_by_email?: string | null
 }
 
 export interface Transfer {
@@ -61,4 +69,8 @@ export interface Transfer {
   currency: Currency
   notes: string | null
   created_at: string
+  created_by_user_id?: string | null
+  created_by_email?: string | null
+  updated_by_user_id?: string | null
+  updated_by_email?: string | null
 }

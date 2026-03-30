@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import type { Transaction, Currency, Wallet, Transfer } from '@/lib/types'
 
 export interface ChartCategoryData {
@@ -185,7 +185,7 @@ function computeWalletBalances(wallets: Wallet[], transactions: Transaction[], t
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Fetch all required data in parallel
     const [

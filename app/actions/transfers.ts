@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export type TransferInput = {
@@ -16,7 +16,8 @@ export type ActionResult = { success: true } | { success: false; error: string }
 
 export async function createTransfer(input: TransferInput): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (input.from_wallet_id === input.to_wallet_id) {
       return { success: false, error: 'Cannot transfer to the same wallet' }
@@ -29,6 +30,8 @@ export async function createTransfer(input: TransferInput): Promise<ActionResult
       amount: input.amount,
       currency: input.currency,
       notes: input.notes || null,
+      created_by_user_id: user?.id,
+      created_by_email: user?.email,
     })
 
     if (error) return { success: false, error: error.message }
@@ -43,7 +46,8 @@ export async function createTransfer(input: TransferInput): Promise<ActionResult
 
 export async function updateTransfer(id: string, input: TransferInput): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (input.from_wallet_id === input.to_wallet_id) {
       return { success: false, error: 'Cannot transfer to the same wallet' }
@@ -58,6 +62,8 @@ export async function updateTransfer(id: string, input: TransferInput): Promise<
         amount: input.amount,
         currency: input.currency,
         notes: input.notes || null,
+        updated_by_user_id: user?.id,
+        updated_by_email: user?.email,
       })
       .eq('id', id)
 
@@ -73,7 +79,7 @@ export async function updateTransfer(id: string, input: TransferInput): Promise<
 
 export async function deleteTransfer(id: string): Promise<ActionResult> {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { error } = await supabase
       .from('transfers')

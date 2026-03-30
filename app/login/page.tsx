@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -37,8 +38,15 @@ export default function LoginPage() {
     <div className="flex h-[80vh] items-center justify-center p-6">
       <div className="w-full max-w-sm bg-[var(--color-surface)] p-8 rounded-2xl border border-[var(--color-surface-border)] shadow-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-brand)]/10 mb-4">
-            <span className="text-[var(--color-brand)] text-xl font-bold">B</span>
+          <div className="flex justify-center mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="Boshaaye Finance Logo" 
+              width={64} 
+              height={64}
+              className="rounded-xl object-contain drop-shadow-md"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Welcome Back</h1>
           <p className="text-sm text-[var(--color-text-secondary)] mt-1.5">Please sign in to access your finances.</p>

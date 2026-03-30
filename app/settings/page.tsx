@@ -70,6 +70,11 @@ export default async function SettingsPage() {
                          Bako
                        </div>
                     </div>
+                    {s.created_by_email && (
+                      <div className="text-[10px] text-[var(--color-text-muted)] mt-3">
+                        Set by {s.created_by_email.split('@')[0]}
+                      </div>
+                    )}
                  </div>
                ))}
              </div>
