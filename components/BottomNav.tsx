@@ -8,7 +8,9 @@ import {
   PlusCircle,
   Wallet,
   Settings,
+  LogOut,
 } from 'lucide-react'
+import { logout } from '@/app/actions/auth'
 
 const navItems = [
   { label: 'Dashboard',    href: '/dashboard',         icon: LayoutDashboard },
@@ -40,6 +42,14 @@ export default function BottomNav() {
           </Link>
         )
       })}
+      
+      <button
+        onClick={() => logout()}
+        className="flex flex-col items-center gap-1 text-xs transition-colors text-rose-400 hover:text-rose-300"
+      >
+        <LogOut size={20} />
+        <span>Out</span>
+      </button>
     </nav>
   )
 }
