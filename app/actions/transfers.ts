@@ -14,6 +14,11 @@ export type TransferInput = {
   fee_amount?: number
   fee_category_id?: string
   fee_funding_source?: 'main_budget' | 'ops_box'
+  // Receipt fields
+  receipt_url?: string | null
+  receipt_file_name?: string | null
+  receipt_mime_type?: string | null
+  receipt_uploaded_at?: string | null
 }
 
 export type ActionResult = { success: true } | { success: false; error: string }
@@ -36,18 +41,18 @@ export async function createTransfer(input: TransferInput): Promise<ActionResult
       const { data: feeTx, error: feeTxError } = await supabase
         .from('transactions')
         .insert({
-          date:                   input.date,
-          type:                   'expense',
-          title:                  `Transfer fee`,
-          amount:                 input.fee_amount!,
-          currency:               input.currency,
-          wallet_id:              input.from_wallet_id,
-          category_id:            input.fee_category_id || null,
-          notes:                  input.notes ? `Fee for transfer: ${input.notes}` : 'Transfer fee',
-          is_client_income:       false,
+          date: input.date,
+          type: 'expense',
+          title: `Transfer fee`,
+          amount: input.fee_amount!,
+          currency: input.currency,
+          wallet_id: input.from_wallet_id,
+          category_id: input.fee_category_id || null,
+          notes: input.notes ? `Fee for transfer: ${input.notes}` : 'Transfer fee',
+          is_client_income: false,
           expense_funding_source: input.fee_funding_source || 'main_budget',
-          created_by_user_id:     user?.id,
-          created_by_email:       user?.email,
+          created_by_user_id: user?.id,
+          created_by_email: user?.email,
         })
         .select('id')
         .single()
@@ -59,18 +64,22 @@ export async function createTransfer(input: TransferInput): Promise<ActionResult
     }
 
     const { error } = await supabase.from('transfers').insert({
-      date:               input.date,
-      from_wallet_id:     input.from_wallet_id,
-      to_wallet_id:       input.to_wallet_id,
-      amount:             input.amount,
-      currency:           input.currency,
-      notes:              input.notes || null,
+      date: input.date,
+      from_wallet_id: input.from_wallet_id,
+      to_wallet_id: input.to_wallet_id,
+      amount: input.amount,
+      currency: input.currency,
+      notes: input.notes || null,
       created_by_user_id: user?.id,
-      created_by_email:   user?.email,
-      fee_amount:         hasFee ? input.fee_amount! : null,
-      fee_category_id:    hasFee ? (input.fee_category_id || null) : null,
+      created_by_email: user?.email,
+      fee_amount: hasFee ? input.fee_amount! : null,
+      fee_category_id: hasFee ? (input.fee_category_id || null) : null,
       fee_funding_source: hasFee ? (input.fee_funding_source || 'main_budget') : null,
       fee_transaction_id: feeTransactionId,
+      receipt_url: input.receipt_url ?? null,
+      receipt_file_name: input.receipt_file_name ?? null,
+      receipt_mime_type: input.receipt_mime_type ?? null,
+      receipt_uploaded_at: input.receipt_uploaded_at ?? null,
     })
 
     if (error) {
@@ -120,18 +129,18 @@ export async function updateTransfer(id: string, input: TransferInput): Promise<
       const { data: feeTx, error: feeTxError } = await supabase
         .from('transactions')
         .insert({
-          date:                   input.date,
-          type:                   'expense',
-          title:                  `Transfer fee`,
-          amount:                 input.fee_amount!,
-          currency:               input.currency,
-          wallet_id:              input.from_wallet_id,
-          category_id:            input.fee_category_id || null,
-          notes:                  input.notes ? `Fee for transfer: ${input.notes}` : 'Transfer fee',
-          is_client_income:       false,
+          date: input.date,
+          type: 'expense',
+          title: `Transfer fee`,
+          amount: input.fee_amount!,
+          currency: input.currency,
+          wallet_id: input.from_wallet_id,
+          category_id: input.fee_category_id || null,
+          notes: input.notes ? `Fee for transfer: ${input.notes}` : 'Transfer fee',
+          is_client_income: false,
           expense_funding_source: input.fee_funding_source || 'main_budget',
-          updated_by_user_id:     user?.id,
-          updated_by_email:       user?.email,
+          updated_by_user_id: user?.id,
+          updated_by_email: user?.email,
         })
         .select('id')
         .single()
@@ -145,18 +154,22 @@ export async function updateTransfer(id: string, input: TransferInput): Promise<
     const { error } = await supabase
       .from('transfers')
       .update({
-        date:               input.date,
-        from_wallet_id:     input.from_wallet_id,
-        to_wallet_id:       input.to_wallet_id,
-        amount:             input.amount,
-        currency:           input.currency,
-        notes:              input.notes || null,
+        date: input.date,
+        from_wallet_id: input.from_wallet_id,
+        to_wallet_id: input.to_wallet_id,
+        amount: input.amount,
+        currency: input.currency,
+        notes: input.notes || null,
         updated_by_user_id: user?.id,
-        updated_by_email:   user?.email,
-        fee_amount:         hasFee ? input.fee_amount! : null,
-        fee_category_id:    hasFee ? (input.fee_category_id || null) : null,
+        updated_by_email: user?.email,
+        fee_amount: hasFee ? input.fee_amount! : null,
+        fee_category_id: hasFee ? (input.fee_category_id || null) : null,
         fee_funding_source: hasFee ? (input.fee_funding_source || 'main_budget') : null,
         fee_transaction_id: newFeeTransactionId,
+        receipt_url: input.receipt_url ?? null,
+        receipt_file_name: input.receipt_file_name ?? null,
+        receipt_mime_type: input.receipt_mime_type ?? null,
+        receipt_uploaded_at: input.receipt_uploaded_at ?? null,
       })
       .eq('id', id)
 
@@ -175,10 +188,10 @@ export async function deleteTransfer(id: string): Promise<ActionResult> {
   try {
     const supabase = await createClient()
 
-    // Fetch the fee_transaction_id before deleting
+    // Fetch the fee_transaction_id and receipt before deleting
     const { data: transfer } = await supabase
       .from('transfers')
-      .select('fee_transaction_id')
+      .select('fee_transaction_id, receipt_url')
       .eq('id', id)
       .single()
 
@@ -193,6 +206,19 @@ export async function deleteTransfer(id: string): Promise<ActionResult> {
       .eq('id', id)
 
     if (error) return { success: false, error: error.message }
+
+    // Best-effort receipt cleanup
+    if (transfer?.receipt_url) {
+      try {
+        const match = transfer.receipt_url.match(/\/object\/sign\/receipts\/(.+?)\?/)
+        if (match?.[1]) {
+          const storagePath = decodeURIComponent(match[1])
+          await supabase.storage.from('receipts').remove([storagePath])
+        }
+      } catch {
+        // Non-fatal
+      }
+    }
 
     revalidatePath('/dashboard')
     revalidatePath('/transfers')

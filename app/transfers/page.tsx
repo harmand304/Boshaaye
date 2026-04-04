@@ -4,6 +4,7 @@ import { getCategories } from '@/lib/data/categories'
 import { formatUSD, formatIQD } from '@/lib/format'
 import TransferForm from '@/components/TransferForm'
 import TransferRowActions from '@/components/TransferRowActions'
+import ReceiptPreviewButton from '@/components/ReceiptPreviewButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +75,13 @@ export default async function TransfersPage() {
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <TransferRowActions id={t.id} />
+                        {t.receipt_url && (
+                          <ReceiptPreviewButton
+                            receiptUrl={t.receipt_url}
+                            receiptFileName={t.receipt_file_name ?? null}
+                            receiptMimeType={t.receipt_mime_type ?? null}
+                          />
+                        )}
                       </div>
                     </div>
                     <div className="text-[var(--color-text-primary)] font-medium tabular-nums pl-4 text-right shrink-0">

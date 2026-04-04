@@ -83,4 +83,9 @@ export interface Transfer {
   fee_category_id?: string | null
   fee_funding_source?: 'main_budget' | 'ops_box' | null
   fee_transaction_id?: string | null
+  // Receipt
+  receipt_url?: string | null
+  receipt_file_name?: string | null
+  receipt_mime_type?: string | null
+  receipt_uploaded_at?: string | null
 }
