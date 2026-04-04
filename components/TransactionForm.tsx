@@ -1,9 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { Paperclip, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { createTransaction, updateTransaction, type TransactionInput } from '@/app/actions/transactions'
 import type { Wallet, Category, AllocationSettings, Transaction } from '@/lib/types'
+
+interface ReceiptState {
+  url: string | null
+  file_name: string | null
+  mime_type: string | null
+  uploaded_at: string | null
+}
 
 interface FormProps {
   wallets: Wallet[]
@@ -16,6 +24,7 @@ export default function TransactionForm({ wallets, categories, currentAllocation
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isEditing = !!initialData
 
@@ -33,12 +42,65 @@ export default function TransactionForm({ wallets, categories, currentAllocation
     initialData?.expense_funding_source || ''
   )
 
+  // Receipt state
+  const [receipt, setReceipt] = useState<ReceiptState>({
+    url: initialData?.receipt_url ?? null,
+    file_name: initialData?.receipt_file_name ?? null,
+    mime_type: initialData?.receipt_mime_type ?? null,
+    uploaded_at: initialData?.receipt_uploaded_at ?? null,
+  })
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false)
+  const [receiptUploadError, setReceiptUploadError] = useState<string | null>(null)
+
   // Filter categories by selected type
   const availableCategories = categories.filter(c => c.type === type)
 
   // Derived Values for preview
   const numAmount = parseFloat(amount) || 0
   const showAllocationPreview = type === 'income' && isClientIncome && currentAllocation && numAmount > 0
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingReceipt(true)
+    setReceiptUploadError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/receipt/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setReceiptUploadError(data.error || 'Upload failed')
+        return
+      }
+
+      setReceipt({
+        url: data.url,
+        file_name: data.file_name,
+        mime_type: data.mime_type,
+        uploaded_at: data.uploaded_at,
+      })
+    } catch {
+      setReceiptUploadError('Upload failed. Please try again.')
+    } finally {
+      setIsUploadingReceipt(false)
+      // Reset file input so the same file can be re-selected if needed
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveReceipt = () => {
+    // We don't delete from storage here — deletion happens server-side on save
+    setReceipt({ url: null, file_name: null, mime_type: null, uploaded_at: null })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,7 +129,11 @@ export default function TransactionForm({ wallets, categories, currentAllocation
       category_id: categoryId || undefined,
       notes: notes || undefined,
       is_client_income: type === 'income' ? isClientIncome : false,
-      expense_funding_source: type === 'expense' && fundingSource !== '' ? (fundingSource as 'ops_box' | 'main_budget') : undefined
+      expense_funding_source: type === 'expense' && fundingSource !== '' ? (fundingSource as 'ops_box' | 'main_budget') : undefined,
+      receipt_url: receipt.url,
+      receipt_file_name: receipt.file_name,
+      receipt_mime_type: receipt.mime_type,
+      receipt_uploaded_at: receipt.uploaded_at,
     }
 
     const res = isEditing && initialData
@@ -275,6 +341,75 @@ export default function TransactionForm({ wallets, categories, currentAllocation
         />
       </div>
 
+      {/* Receipt Upload */}
+      <div>
+        <label className={labelClass}>Receipt / Attachment</label>
+        
+        {receipt.url ? (
+          // Receipt attached state
+          <div className="flex items-center gap-3 p-3 bg-[var(--color-surface-muted)] border border-[var(--color-brand)]/30 rounded-md">
+            <div className="text-[var(--color-brand)] shrink-0">
+              {receipt.mime_type === 'application/pdf' ? (
+                <FileText size={18} />
+              ) : (
+                <ImageIcon size={18} />
+              )}
+            </div>
+            <a
+              href={receipt.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-[var(--color-brand)] hover:underline truncate flex-1"
+            >
+              {receipt.file_name || 'Receipt attached'}
+            </a>
+            <button
+              type="button"
+              onClick={handleRemoveReceipt}
+              className="text-[var(--color-text-muted)] hover:text-rose-400 transition-colors shrink-0"
+              title="Remove receipt"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ) : (
+          // No receipt state
+          <div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingReceipt}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-dashed border-[var(--color-surface-border)] rounded-md text-[var(--color-text-secondary)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] transition-colors disabled:opacity-50"
+            >
+              {isUploadingReceipt ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Paperclip size={15} />
+                  Attach Receipt
+                </>
+              )}
+            </button>
+            <p className="text-[10px] text-[var(--color-text-muted)] mt-1.5">JPG, PNG, WebP or PDF — max 10MB</p>
+          </div>
+        )}
+
+        {receiptUploadError && (
+          <p className="text-xs text-rose-400 mt-1">{receiptUploadError}</p>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+      </div>
+
       {/* Submit */}
       <div className="pt-2 flex gap-3">
         <button 
@@ -286,7 +421,7 @@ export default function TransactionForm({ wallets, categories, currentAllocation
         </button>
         <button 
           type="submit" 
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploadingReceipt}
           className="flex-1 bg-[var(--color-brand)] text-black py-2.5 rounded-lg font-bold hover:bg-[var(--color-brand-light)] transition-colors disabled:opacity-50"
         >
           {isSubmitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Save Transaction')}

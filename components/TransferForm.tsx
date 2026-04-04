@@ -3,61 +3,58 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTransfer, updateTransfer, type TransferInput } from '@/app/actions/transfers'
-import type { Wallet, Transfer } from '@/lib/types'
+import type { Wallet, Category, Transfer } from '@/lib/types'
 
 interface FormProps {
   wallets: Wallet[]
+  categories: Category[]
   initialData?: Transfer
 }
 
-export default function TransferForm({ wallets, initialData }: FormProps) {
+export default function TransferForm({ wallets, categories, initialData }: FormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const isEditing = !!initialData
 
-  // Form State
   const [date, setDate] = useState(() => initialData?.date || new Date().toISOString().split('T')[0])
   const [currency, setCurrency] = useState<'USD' | 'IQD'>(initialData?.currency || 'USD')
   const [fromWalletId, setFromWalletId] = useState(initialData?.from_wallet_id || '')
   const [toWalletId, setToWalletId] = useState(initialData?.to_wallet_id || '')
-  const [amount, setAmount] = useState(initialData?.amount?.toString() || '')
+  const [amount, setAmount] = useState(initialData?.amount.toString() || '')
   const [notes, setNotes] = useState(initialData?.notes || '')
 
+  // Fee fields
+  const [feeAmount, setFeeAmount] = useState(initialData?.fee_amount?.toString() || '')
+  const [feeCategoryId, setFeeCategoryId] = useState(initialData?.fee_category_id || '')
+  const [feeFundingSource, setFeeFundingSource] = useState<'main_budget' | 'ops_box'>(
+    initialData?.fee_funding_source || 'main_budget'
+  )
+
   const availableWallets = wallets.filter(w => w.currency === currency)
+  const expenseCategories = categories.filter(c => c.type === 'expense')
+
+  const numAmount = parseFloat(amount) || 0
+  const numFee = parseFloat(feeAmount) || 0
+  const hasFee = numFee > 0
+  const totalDeducted = numAmount + numFee
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
-    if (!fromWalletId || !toWalletId) {
-      setError('Both source and destination wallets are required')
-      setIsSubmitting(false)
-      return
-    }
-
-    if (fromWalletId === toWalletId) {
-       setError('Cannot transfer to the same wallet')
-       setIsSubmitting(false)
-       return
-    }
-
-    const numAmount = parseFloat(amount) || 0
-    if (numAmount <= 0) {
-      setError('Amount must be greater than zero')
-      setIsSubmitting(false)
-      return
-    }
-
     const input: TransferInput = {
       date,
-      currency,
       from_wallet_id: fromWalletId,
       to_wallet_id: toWalletId,
       amount: numAmount,
-      notes: notes || undefined
+      currency,
+      notes: notes || undefined,
+      fee_amount: hasFee ? numFee : undefined,
+      fee_category_id: hasFee ? (feeCategoryId || undefined) : undefined,
+      fee_funding_source: hasFee ? feeFundingSource : undefined,
     }
 
     const res = isEditing && initialData
@@ -71,6 +68,8 @@ export default function TransferForm({ wallets, initialData }: FormProps) {
          // Clear form on add success
          setAmount('')
          setNotes('')
+         setFeeAmount('')
+         setFeeCategoryId('')
       }
       router.refresh()
     } else {
@@ -163,7 +162,74 @@ export default function TransferForm({ wallets, initialData }: FormProps) {
           />
       </div>
 
-      {/* Row 4: Notes */}
+      {/* Row 4: Transfer Fee (optional) */}
+      <div className="border-t border-[var(--color-surface-border)] pt-4 space-y-4">
+        <div>
+          <label className={labelClass}>Transfer Fee <span className="text-[var(--color-text-muted)] normal-case font-normal">(optional)</span></label>
+          <input 
+            type="number" 
+            step="0.01"
+            min="0"
+            placeholder="0.00 — leave empty if no fee"
+            className={inputClass}
+            value={feeAmount}
+            onChange={e => setFeeAmount(e.target.value)}
+          />
+        </div>
+
+        {/* Fee details — only shown when a fee is entered */}
+        {hasFee && (
+          <div className="space-y-4 p-3 bg-[var(--color-navy-700)] rounded-lg border border-rose-500/20">
+            <div>
+              <label className={labelClass}>Fee Category</label>
+              <select className={inputClass} value={feeCategoryId} onChange={e => setFeeCategoryId(e.target.value)}>
+                <option value="">-- Optional --</option>
+                {expenseCategories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Fee Funding Source</label>
+              <div className="flex gap-4 mt-1">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--color-text-primary)]">
+                  <input 
+                    type="radio" 
+                    name="fee_funding_source"
+                    checked={feeFundingSource === 'main_budget'}
+                    onChange={() => setFeeFundingSource('main_budget')}
+                  />
+                  Main Budget
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--color-text-primary)]">
+                  <input 
+                    type="radio" 
+                    name="fee_funding_source"
+                    checked={feeFundingSource === 'ops_box'}
+                    onChange={() => setFeeFundingSource('ops_box')}
+                  />
+                  Ops Box
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Live helper text */}
+        {hasFee && numAmount > 0 && (
+          <p className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-muted)] rounded px-3 py-2">
+            Total deducted from source wallet:{' '}
+            <span className="font-semibold text-[var(--color-text-primary)]">
+              {currency === 'USD'
+                ? `$${totalDeducted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : `${totalDeducted.toLocaleString()} IQD`}
+            </span>
+            {' '}(transfer {currency === 'USD' ? `$${numAmount.toFixed(2)}` : `${numAmount.toLocaleString()} IQD`} + fee {currency === 'USD' ? `$${numFee.toFixed(2)}` : `${numFee.toLocaleString()} IQD`})
+          </p>
+        )}
+      </div>
+
+      {/* Row 5: Notes */}
       <div>
          <label className={labelClass}>Notes</label>
           <input 
@@ -198,10 +264,9 @@ export default function TransferForm({ wallets, initialData }: FormProps) {
 
       {!isEditing && (
          <p className="text-xs text-center text-[var(--color-text-muted)] mt-2">
-           Transfers only move money between wallets. They do not affect income, expenses, or the Main Budget.
+           Transfers only move money between wallets. Fees (if any) are recorded as expenses.
          </p>
       )}
     </form>
   )
 }
-

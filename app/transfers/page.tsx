@@ -1,5 +1,6 @@
 import { getWallets } from '@/lib/data/wallets'
 import { getTransfers, type TransferWithWallets } from '@/lib/data/transfers'
+import { getCategories } from '@/lib/data/categories'
 import { formatUSD, formatIQD } from '@/lib/format'
 import TransferForm from '@/components/TransferForm'
 import TransferRowActions from '@/components/TransferRowActions'
@@ -11,9 +12,10 @@ export const metadata = {
 }
 
 export default async function TransfersPage() {
-  const [wallets, transfers] = await Promise.all([
+  const [wallets, transfers, categories] = await Promise.all([
     getWallets(),
-    getTransfers()
+    getTransfers(),
+    getCategories()
   ])
 
   return (
@@ -40,7 +42,7 @@ export default async function TransfersPage() {
         {/* Left Side: Form */}
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">New Transfer</h2>
-          <TransferForm wallets={wallets} />
+          <TransferForm wallets={wallets} categories={categories} />
         </div>
 
         {/* Right Side: History List */}
@@ -76,6 +78,11 @@ export default async function TransfersPage() {
                     </div>
                     <div className="text-[var(--color-text-primary)] font-medium tabular-nums pl-4 text-right shrink-0">
                       {t.currency === 'USD' ? formatUSD(t.amount) : formatIQD(t.amount)}
+                      {t.fee_amount && t.fee_amount > 0 && (
+                        <div className="text-[10px] text-rose-400 mt-0.5">
+                          +{t.currency === 'USD' ? formatUSD(t.fee_amount) : formatIQD(t.fee_amount)} fee
+                        </div>
+                      )}
                     </div>
                  </div>
                ))}

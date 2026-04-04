@@ -58,6 +58,11 @@ export interface Transaction {
   created_by_email?: string | null
   updated_by_user_id?: string | null
   updated_by_email?: string | null
+  // Receipt
+  receipt_url?: string | null
+  receipt_file_name?: string | null
+  receipt_mime_type?: string | null
+  receipt_uploaded_at?: string | null
 }
 
 export interface Transfer {
@@ -73,4 +78,9 @@ export interface Transfer {
   created_by_email?: string | null
   updated_by_user_id?: string | null
   updated_by_email?: string | null
+  // Fee
+  fee_amount?: number | null
+  fee_category_id?: string | null
+  fee_funding_source?: 'main_budget' | 'ops_box' | null
+  fee_transaction_id?: string | null
 }

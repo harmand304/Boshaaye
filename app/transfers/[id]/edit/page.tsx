@@ -1,5 +1,6 @@
 import { getWallets } from '@/lib/data/wallets'
 import { getTransferById } from '@/lib/data/transfers'
+import { getCategories } from '@/lib/data/categories'
 import TransferForm from '@/components/TransferForm'
 import { notFound } from 'next/navigation'
 
@@ -12,9 +13,10 @@ export const metadata = {
 export default async function EditTransferPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const [wallets, transfer] = await Promise.all([
+  const [wallets, transfer, categories] = await Promise.all([
     getWallets(),
-    getTransferById(id)
+    getTransferById(id),
+    getCategories()
   ])
 
   if (!transfer) return notFound()
@@ -28,6 +30,7 @@ export default async function EditTransferPage({ params }: { params: Promise<{ i
 
       <TransferForm 
         wallets={wallets} 
+        categories={categories}
         initialData={transfer}
       />
     </main>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import TransactionRowActions from '@/components/TransactionRowActions'
 import TransactionFilters from '@/components/TransactionFilters'
 import Pagination from '@/components/Pagination'
+import ReceiptPreviewButton from '@/components/ReceiptPreviewButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,6 +82,7 @@ export default async function TransactionsPage({
                   <th className="px-6 py-6 border-b border-[var(--color-surface-border)]">Type & Category</th>
                   <th className="px-6 py-6 border-b border-[var(--color-surface-border)]">Wallet</th>
                   <th className="px-6 py-6 border-b border-[var(--color-surface-border)] text-right">Amount</th>
+                  <th className="px-2 py-6 border-b border-[var(--color-surface-border)] text-center w-8"></th>
                   <th className="px-6 py-6 border-b border-[var(--color-surface-border)] text-right pr-6">Actions</th>
                 </tr>
               </thead>
@@ -119,6 +121,15 @@ export default async function TransactionsPage({
                       'text-[var(--color-text-primary)]'
                     }`}>
                       {t.type === 'expense' ? '-' : ''}{t.currency === 'USD' ? formatUSD(t.amount) : formatIQD(t.amount)}
+                    </td>
+                    <td className="px-2 py-5 text-center">
+                      {t.receipt_url && (
+                        <ReceiptPreviewButton
+                          receiptUrl={t.receipt_url}
+                          receiptFileName={t.receipt_file_name ?? null}
+                          receiptMimeType={t.receipt_mime_type ?? null}
+                        />
+                      )}
                     </td>
                     <td className="py-5 content-center pr-2">
                       <TransactionRowActions id={t.id} />

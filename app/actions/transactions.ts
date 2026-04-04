@@ -15,6 +15,12 @@ export type TransactionInput = {
   notes?: string
   is_client_income: boolean
   expense_funding_source?: 'ops_box' | 'main_budget'
+  // Receipt fields
+  receipt_url?: string | null
+  receipt_file_name?: string | null
+  receipt_mime_type?: string | null
+  receipt_uploaded_at?: string | null
+  receipt_storage_path?: string | null  // internal, used for delete ops
 }
 
 export type ActionResult = { success: true } | { success: false; error: string }
@@ -66,6 +72,10 @@ export async function createTransaction(input: TransactionInput): Promise<Action
       expense_funding_source: input.expense_funding_source || null,
       created_by_user_id:     user?.id,
       created_by_email:       user?.email,
+      receipt_url:            input.receipt_url || null,
+      receipt_file_name:      input.receipt_file_name || null,
+      receipt_mime_type:      input.receipt_mime_type || null,
+      receipt_uploaded_at:    input.receipt_uploaded_at || null,
       ...alloc,
     })
 
@@ -127,6 +137,10 @@ export async function updateTransaction(id: string, input: TransactionInput): Pr
         expense_funding_source: input.expense_funding_source || null,
         updated_by_user_id:     user?.id,
         updated_by_email:       user?.email,
+        receipt_url:            input.receipt_url ?? null,
+        receipt_file_name:      input.receipt_file_name ?? null,
+        receipt_mime_type:      input.receipt_mime_type ?? null,
+        receipt_uploaded_at:    input.receipt_uploaded_at ?? null,
         ...alloc,
       })
       .eq('id', id)
@@ -145,12 +159,33 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   try {
     const supabase = await createClient()
 
+    // Fetch receipt path before deleting so we can clean up storage
+    const { data: tx } = await supabase
+      .from('transactions')
+      .select('receipt_url, receipt_file_name')
+      .eq('id', id)
+      .single()
+
     const { error } = await supabase
       .from('transactions')
       .delete()
       .eq('id', id)
 
     if (error) return { success: false, error: error.message }
+
+    // Best-effort receipt cleanup — extract the storage path from the signed URL
+    if (tx?.receipt_url) {
+      try {
+        // The storage path is embedded in the signed URL as /object/sign/receipts/{path}?token=...
+        const match = tx.receipt_url.match(/\/object\/sign\/receipts\/(.+?)\?/)
+        if (match?.[1]) {
+          const storagePath = decodeURIComponent(match[1])
+          await supabase.storage.from('receipts').remove([storagePath])
+        }
+      } catch {
+        // Non-fatal — orphan files are acceptable
+      }
+    }
 
     revalidatePath('/dashboard')
     revalidatePath('/transactions')
